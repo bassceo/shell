@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <ctime>
+#include <cstdlib>
 
 using namespace std;
 
@@ -19,29 +19,32 @@ vector<string> parseCommand(const string& input) {
     return tokens;
 }
 
-int execute(vector<string> args) {
+int execute(const vector<string>& args) {
     if (args.empty()) return -1;
 
     pid_t pid = fork();
 
     if (pid < 0) {
-        cerr << "Error: Failed to create a new process." << endl;
+        perror("Error: Failed to create a new process");
         return -1;
     } else if (pid == 0) {
         vector<char*> c_args;
-        for (auto& arg : args) {
-            c_args.push_back(&arg[0]);
+        for (const auto& arg : args) {
+            c_args.push_back(const_cast<char*>(arg.c_str()));
         }
         c_args.push_back(nullptr);
 
         if (execvp(c_args[0], c_args.data()) == -1) {
-            cerr << "Error: Command execution failed." << endl;
+            perror("Error: Command execution failed");
             exit(EXIT_FAILURE);
         }
     } else {
         int status;
-        waitpid(pid, &status, 0);
-        return status;
+        if (waitpid(pid, &status, 0) == -1) {
+            perror("Error: waitpid failed");
+            return -1;
+        }
+        return WEXITSTATUS(status);
     }
     return 0;
 }

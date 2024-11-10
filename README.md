@@ -1,6 +1,13 @@
 # Лабораторная работа №1
 ## Лукьянчук Ярослав P3323 (367361)
-## Target OS: Linux, ForkKind: fork
+```json
+Вариант = {
+    target_os: 'Linux',
+    fork_kind: 'fork',
+    
+}
+```
+
 ---
 ## Задание
 
