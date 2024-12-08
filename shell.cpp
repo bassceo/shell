@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <chrono>
 
 using namespace std;
 
@@ -22,6 +23,7 @@ vector<string> parseCommand(const string& input) {
 int execute(const vector<string>& args) {
     if (args.empty()) return -1;
 
+    auto start = chrono::high_resolution_clock::now();
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -44,6 +46,9 @@ int execute(const vector<string>& args) {
             perror("Error: waitpid failed");
             return -1;
         }
+        auto end = chrono::high_resolution_clock::now();
+        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
+        cout << "\nExecution time: " << duration.count() << "ms" << endl;
         return WEXITSTATUS(status);
     }
     return 0;
