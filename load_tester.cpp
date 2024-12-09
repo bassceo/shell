@@ -6,50 +6,62 @@
 #include <filesystem>
 #include <sstream>
 #include <cstdlib>
-#include "algorithms/bin-search.hpp"
-#include "algorithms/ema-sort-int.hpp"
+#include <random>
+#include "algorithms/bin-search.h"
+#include "algorithms/ema-sort-int.h"
 
 using namespace std;
 namespace fs = std::filesystem;
 
-void worker_thread(int iterations) {
+void worker_thread(int iterations, const string& program) {
     vector<int> data(1000);
     stringstream ss;
     ss << "temp_" << this_thread::get_id();
     string temp_dir = ss.str();
     fs::create_directory(temp_dir);
     
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<int> dist(0, 9999);
+
     for (int i = 0; i < iterations; i++) {
         // Generate random data
         for (int j = 0; j < 1000; j++) {
-            data[j] = rand() % 10000;
+            data[j] = dist(rng);
         }
         
-        // Run binary search
-        sort(data.begin(), data.end());
-        binarySearch(data, rand() % 10000);
-        
-        // Run external EMA sort
-        exponential_moving_average_sort(data, temp_dir);
+        if (program == "bin-search") {
+            binarySearch(data, dist(rng));
+        } else if (program == "ema-sort-int") {
+            ema_sort_int(data, temp_dir);
+        }
     }
     
     fs::remove_all(temp_dir);
 }
 
-int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        cout << "Usage: " << argv[0] << " <num_threads> <iterations>" << endl;
+int main() {
+    string program;
+    int num_threads, iterations;
+
+    cout << "Enter program to execute (bin-search, ema-sort-int): ";
+    cin >> program;
+
+    if (program != "bin-search" && program != "ema-sort-int") {
+        cout << "Wrong program" << endl;
         return 1;
     }
 
-    int num_threads = atoi(argv[1]);
-    int iterations = atoi(argv[2]);
+    cout << "Enter number of threads to use: ";
+    cin >> num_threads;
+
+    cout << "Enter iterations per thread: ";
+    cin >> iterations;
     
     vector<thread> threads;
     auto start = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < num_threads; i++) {
-        threads.emplace_back(worker_thread, iterations);
+        threads.emplace_back(worker_thread, iterations, program);
     }
 
     for (auto& t : threads) {
@@ -57,8 +69,12 @@ int main(int argc, char* argv[]) {
     }
 
     auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-    cout << "Total execution time: " << duration.count() << "ms" << endl;
+    auto duration = chrono::duration_cast<chrono::seconds>(end - start);
+    auto duration_precise = chrono::duration_cast<chrono::duration<double>>(end - start);
+    
+    cout << "CPU load executed with " << num_threads << " threads and " 
+         << iterations << " iterations per thread. Time taken: " 
+         << duration_precise.count() << " seconds." << endl;
 
     return 0;
 }

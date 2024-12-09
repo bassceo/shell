@@ -55,7 +55,7 @@ void merge_files(const vector<string>& chunk_files, const string& output_file) {
     }
 }
 
-vector<int> exponential_moving_average_sort(const vector<int>& arr, const string& temp_dir) {
+vector<int> ema_sort_int(const vector<int>& arr, const string& temp_dir) {
     const size_t CHUNK_SIZE = 1024 * 1024; // 1MB chunks
     vector<string> chunk_files;
     

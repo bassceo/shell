@@ -1,4 +1,7 @@
 .vscode
 ./main
 .DS_Store
-shell.o
+shell
+load_tester
+load_tester_opt
+shell

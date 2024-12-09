@@ -2,8 +2,11 @@
 #include <vector>
 #include <algorithm>
 #include <cstdlib>
+#include "bin-search.h"
 
-int binarySearch(const std::vector<int>& arr, int target) {
+using namespace std;
+
+int binarySearch(const vector<int>& arr, int target) {
     int left = 0;
     int right = arr.size() - 1;
 

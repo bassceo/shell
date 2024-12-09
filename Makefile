@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -pthread
-LDFLAGS = -lstdc++fs
+LDFLAGS = 
 
 SRCS = algorithms/bin-search.cpp algorithms/ema-sort-int.cpp
 
