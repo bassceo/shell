@@ -4,6 +4,7 @@
 #include <string>
 #include <filesystem>
 #include <queue>
+#include <algorithm>
 
 using namespace std;
 
