@@ -8,7 +8,6 @@
 
 using namespace std;
 
-// Write chunk to temp file with calculated EMAs
 void write_chunk(const vector<int>& chunk, const string& filename) {
     ofstream out(filename, ios::binary);
     int size = chunk.size();
@@ -16,7 +15,6 @@ void write_chunk(const vector<int>& chunk, const string& filename) {
     out.write(reinterpret_cast<const char*>(chunk.data()), size * sizeof(int));
 }
 
-// Read chunk from temp file
 vector<int> read_chunk(const string& filename) {
     ifstream in(filename, ios::binary);
     int size;
@@ -26,14 +24,12 @@ vector<int> read_chunk(const string& filename) {
     return chunk;
 }
 
-// Merge multiple sorted chunks
 void merge_files(const vector<string>& chunk_files, const string& output_file) {
-    vector<ifstream> inputs;
+    vector<ifstream> inputs(chunk_files.size());
     priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> heap;
 
-    // Open all input files and initialize heap
     for (size_t i = 0; i < chunk_files.size(); i++) {
-        inputs.emplace_back(chunk_files[i], ios::binary);
+        inputs[i].open(chunk_files[i], ios::binary);
         int value;
         if (inputs[i].read(reinterpret_cast<char*>(&value), sizeof(int))) {
             heap.push({value, i});
@@ -42,7 +38,6 @@ void merge_files(const vector<string>& chunk_files, const string& output_file) {
 
     ofstream out(output_file, ios::binary);
     
-    // Merge chunks using min-heap
     while (!heap.empty()) {
         auto [value, index] = heap.top();
         heap.pop();
@@ -57,20 +52,14 @@ void merge_files(const vector<string>& chunk_files, const string& output_file) {
 }
 
 vector<int> ema_sort_int(const vector<int>& arr, const string& temp_dir) {
-    const size_t CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+    const size_t CHUNK_SIZE = 1024 * 1024;
     vector<string> chunk_files;
     
-    // Create temp directory if it doesn't exist
     filesystem::create_directories(temp_dir);
 
-    // Split into chunks and sort each chunk
     for (size_t i = 0; i < arr.size(); i += CHUNK_SIZE) {
-        vector<int> chunk;
-        for (size_t j = i; j < min(i + CHUNK_SIZE, arr.size()); j++) {
-            chunk.push_back(arr[j]);
-        }
+        vector<int> chunk(arr.begin() + i, arr.begin() + min(i + CHUNK_SIZE, arr.size()));
         
-        // Calculate EMA for chunk elements
         double ema = chunk[0];
         for (size_t j = 1; j < chunk.size(); j++) {
             ema = 0.5 * chunk[j] + 0.5 * ema;
@@ -78,19 +67,16 @@ vector<int> ema_sort_int(const vector<int>& arr, const string& temp_dir) {
         
         sort(chunk.begin(), chunk.end());
         
-        string chunk_file = temp_dir + "/chunk_" + to_string(i/CHUNK_SIZE) + ".tmp";
+        string chunk_file = temp_dir + "/chunk_" + to_string(i / CHUNK_SIZE) + ".tmp";
         write_chunk(chunk, chunk_file);
         chunk_files.push_back(chunk_file);
     }
 
-    // Merge sorted chunks
     string output_file = temp_dir + "/sorted.tmp";
     merge_files(chunk_files, output_file);
 
-    // Read final sorted result
     vector<int> result = read_chunk(output_file);
 
-    // Cleanup temporary files
     for (const auto& file : chunk_files) {
         filesystem::remove(file);
     }

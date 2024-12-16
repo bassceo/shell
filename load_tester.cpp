@@ -1,11 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <thread>
-#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <sstream>
-#include <cstdlib>
 #include <random>
 #include "algorithms/bin-search.h"
 #include "algorithms/ema-sort-int.h"
@@ -15,48 +13,49 @@ namespace fs = std::filesystem;
 
 void worker_thread(int iterations, const string& program) {
     vector<int> data(1000);
+
     stringstream ss;
     ss << "temp_" << this_thread::get_id();
     string temp_dir = ss.str();
     fs::create_directory(temp_dir);
-    
-    std::mt19937 rng(std::random_device{}());
-    std::uniform_int_distribution<int> dist(0, 9999);
+
+    random_device rd;
+    mt19937 generator(rd());
+    uniform_int_distribution<int> distribution(0, 9999);
 
     for (int i = 0; i < iterations; i++) {
-        // Generate random data
         for (int j = 0; j < 1000; j++) {
-            data[j] = dist(rng);
+            data[j] = distribution(generator);
         }
-        
+
         if (program == "bin-search") {
-            binarySearch(data, dist(rng));
+            binarySearch(data, distribution(generator));
         } else if (program == "ema-sort-int") {
             ema_sort_int(data, temp_dir);
         }
     }
-    
+
     fs::remove_all(temp_dir);
 }
 
-int main() {
-    string program;
-    int num_threads, iterations;
-
-    cout << "Enter program to execute (bin-search, ema-sort-int): ";
-    cin >> program;
-
-    if (program != "bin-search" && program != "ema-sort-int") {
-        cout << "Wrong program" << endl;
+int main(int argc, char* argv[]) {
+    if (argc != 4) {
+        cerr << "Usage: " << argv[0] << " <program> <num_threads> <iterations>" << endl;
+        cerr << "  <program>: bin-search or ema-sort-int" << endl;
+        cerr << "  <num_threads>: number of threads" << endl;
+        cerr << "  <iterations>: number of iterations per thread" << endl;
         return 1;
     }
 
-    cout << "Enter number of threads to use: ";
-    cin >> num_threads;
+    string program = argv[1];
+    int num_threads = stoi(argv[2]);
+    int iterations = stoi(argv[3]);
 
-    cout << "Enter iterations per thread: ";
-    cin >> iterations;
-    
+    if (program != "bin-search" && program != "ema-sort-int") {
+        cerr << "Invalid algorithm. Use 'bin-search' or 'ema-sort-int'." << endl;
+        return 1;
+    }
+
     vector<thread> threads;
     auto start = chrono::high_resolution_clock::now();
 
@@ -71,9 +70,9 @@ int main() {
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::seconds>(end - start);
     auto duration_precise = chrono::duration_cast<chrono::duration<double>>(end - start);
-    
-    cout << "CPU load executed with " << num_threads << " threads and " 
-         << iterations << " iterations per thread. Time taken: " 
+
+    cout << "CPU load completed with " << num_threads << " threads and "
+         << iterations << " iterations per thread. Execution time: "
          << duration_precise.count() << " seconds." << endl;
 
     return 0;

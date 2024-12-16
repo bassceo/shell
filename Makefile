@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -pthread
-LDFLAGS = 
+LDFLAGS =
 
 SRCS = algorithms/bin-search.cpp algorithms/ema-sort-int.cpp
 
@@ -13,7 +13,7 @@ load_tester: load_tester.cpp $(SRCS)
 	$(CXX) $(CXXFLAGS) -o load_tester load_tester.cpp $(SRCS) $(LDFLAGS)
 
 load_tester_opt: load_tester.cpp $(SRCS)
-	$(CXX) $(CXXFLAGS) -O3 -o load_tester_opt load_tester.cpp $(SRCS) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -Ofast -o load_tester_opt load_tester.cpp $(SRCS) $(LDFLAGS)
 
 clean:
 	rm -f shell load_tester load_tester_opt
