@@ -1,14 +1,18 @@
 # Лабораторная работа №1
 ## Лукьянчук Ярослав P3323 (367361)
 ```json
-Вариант = {
-    target_os: 'Linux',
-    fork_kind: 'fork',
-    
+{
+  "target_os": "Linux",
+  "fork_kind": "fork",
+  "bench": {
+    "0": "ema-sort-int",
+    "1": "bin-search"
+  }
 }
 ```
 
-[Отчёт](./REPORT.md)
+[Отчёт](./reports/REPORT.md)
+[Отчёт PDF](./reports/report.pdf)
 
 ---
 ## Задание
