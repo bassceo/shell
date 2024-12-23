@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <chrono>
+#include <sys/resource.h>
 
 using namespace std;
 
@@ -20,7 +21,17 @@ vector<string> parseCommand(const string& input) {
     return tokens;
 }
 
-int execute(const vector<string>& args) {
+void printExecutionTime(const chrono::high_resolution_clock::time_point& start, const chrono::high_resolution_clock::time_point& end, const struct rusage& usage) {
+    auto real_time = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+
+    auto user_time = usage.ru_utime.tv_sec * 1000 + usage.ru_utime.tv_usec / 1000;
+
+    auto sys_time = usage.ru_stime.tv_sec * 1000 + usage.ru_stime.tv_usec / 1000;
+
+    cout << "real: " << real_time << "ms, user: " << user_time << "ms, sys: " << sys_time << "ms" << endl;
+}
+
+int execute(const vector<string>& args, bool measureTime) {
     if (args.empty()) return -1;
 
     auto start = chrono::high_resolution_clock::now();
@@ -42,13 +53,19 @@ int execute(const vector<string>& args) {
         }
     } else {
         int status;
-        if (waitpid(pid, &status, 0) == -1) {
+        struct rusage usage;
+
+        if (wait4(pid, &status, 0, &usage) == -1) {
             perror("Error: waitpid failed");
             return -1;
         }
+
         auto end = chrono::high_resolution_clock::now();
-        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
-        cout << "\nExecution time: " << duration.count() << "ms" << endl;
+
+        if (measureTime) {
+            printExecutionTime(start, end, usage);
+        }
+
         return WEXITSTATUS(status);
     }
     return 0;
@@ -65,7 +82,14 @@ void process() {
         if (args.empty()) continue;
         if (args[0] == "quit") break;
 
-        int status = execute(args);
+        bool measureTime = false;
+
+        if (args[0] == "time" && args.size() > 1) {
+            measureTime = true;
+            args.erase(args.begin());
+        }
+
+        int status = execute(args, measureTime);
         if (status != 0) {
             cout << "Command exited with status: " << status << endl;
         }
