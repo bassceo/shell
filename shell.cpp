@@ -89,9 +89,19 @@ void process() {
             args.erase(args.begin());
         }
 
-        int status = execute(args, measureTime);
-        if (status != 0) {
-            cout << "Command exited with status: " << status << endl;
+        if (args[0] == "cd") {
+            if (args.size() < 2) {
+                cout << "Usage: cd <directory>" << endl;
+            } else {
+                if (chdir(args[1].c_str()) != 0) {
+                    perror("Error: Failed to change directory");
+                }
+            }
+        } else {
+            int status = execute(args, measureTime);
+            if (status != 0) {
+                cout << "Command exited with status: " << status << endl;
+            }
         }
     }
 }
